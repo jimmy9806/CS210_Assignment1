@@ -239,7 +239,40 @@ void clampedExpSerial(float* values, int* exponents, float* output, int N) {
 void clampedExpVector(float* values, int* exponents, float* output, int N) {
   // TODO: Implement your vectorized version of clampedExpSerial here
 
-  for (int i=0; i<N; i+=VECTOR_WIDTH) {
+
+  __cmu418_vec_float x;
+  __cmu418_vec_int y;
+  __cmu418_vec_float result;
+  __cmu418_mask maskAll = _cmu418_init_ones ();
+  __cmu418_mask makeIsZero = _cmu418_init_ones (0);
+  __cmu418_mask maskIsNotZero;
+  int LAST_VECTOR_LENGTH;
+  for (int i = 0; i < N; i += VECTOR_WIDTH)
+  {
+    // If the vector's length is not a integer multiple of VECTOR_WIDTH
+    if (i + VECTOR_WIDTH > N ) {
+      LAST_VECTOR_LENGTH = N - i;
+    } else {
+      LAST_VECTOR_LENGTH = VECTOR_WIDTH;
+    }
+
+    result = _cmu418_vset_float (9.999999f);
+
+    _cmu418_vload_float (x, values + i,    maskAll);          // x = values[i]
+    _cmu418_vload_int   (y, exponents + i, maskAll);          // y = exponents[i]
+    _cmu418_veq_int     (maskIsZero, y, zero_int, maskAll);   // if (y == 0)
+    _cmu418_vmove_float (result, one_float, maskIsZero);      // output[i] = 1.f
+
+
+    maskIsNotZero = _cmu418_mask_not(maskIsZero);
+    maskIsNotZero = _cmu418_mask_and(maskIsNotZero, maskAll);    // } else {
+    __cmu418_mask maskIsGreaterThanZero = maskIsNotZero;
+
+
+    __cmu418_vec_float resultTemp = _cmu418_vset_float(0.f);       // float result;
+    _cmu418_vmove_float (resultTemp, x, maskIsGreaterThanZero);    // reslut = x;
+
+    // Leaving rest undone 201904192254
 
   }
 
