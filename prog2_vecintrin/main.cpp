@@ -243,37 +243,61 @@ void clampedExpVector(float* values, int* exponents, float* output, int N) {
   __cmu418_vec_float x;
   __cmu418_vec_int y;
   __cmu418_vec_float result;
-  __cmu418_mask maskAll = _cmu418_init_ones ();
-  __cmu418_mask makeIsZero = _cmu418_init_ones (0);
+  // Initialize masks
+  __cmu418_mask             maskAll    = _cmu418_init_ones ();
+  __cmu418_mask             maskIsZero = _cmu418_init_ones (0);
+  // Initialize constants
+  __cmu418_vec_int          ones       = _cmu418_vset_int (1);
+  __cmu418_vec_float        float1s    = _cmu418_vset_float (1.f);
+  __cmu418_vec_int          zeros      = _cmu418_vset_int (0);
+  __cmu418_vec_float        float9_999999s    = _cmu418_vset_float (9.999999f);
   __cmu418_mask maskIsNotZero;
   int LAST_VECTOR_LENGTH;
   for (int i = 0; i < N; i += VECTOR_WIDTH)
   {
     // If the vector's length is not a integer multiple of VECTOR_WIDTH
-    if (i + VECTOR_WIDTH > N ) {
+    if (i + VECTOR_WIDTH > N )
+    {
       LAST_VECTOR_LENGTH = N - i;
-    } else {
+    }
+    else
+    {
       LAST_VECTOR_LENGTH = VECTOR_WIDTH;
     }
+
+    maskAll = _cmu418_init_ones (LAST_VECTOR_LENGTH);
 
     result = _cmu418_vset_float (9.999999f);
 
     _cmu418_vload_float (x, values + i,    maskAll);          // x = values[i]
     _cmu418_vload_int   (y, exponents + i, maskAll);          // y = exponents[i]
-    _cmu418_veq_int     (maskIsZero, y, zero_int, maskAll);   // if (y == 0)
-    _cmu418_vmove_float (result, one_float, maskIsZero);      // output[i] = 1.f
+    _cmu418_veq_int     (maskIsZero, y, zeros, maskAll);   // if (y == 0)
+    _cmu418_vmove_float (result, float1s, maskIsZero);      // output[i] = 1.f
 
 
-    maskIsNotZero = _cmu418_mask_not(maskIsZero);
-    maskIsNotZero = _cmu418_mask_and(maskIsNotZero, maskAll);    // } else {
+    maskIsNotZero = _cmu418_mask_not (maskIsZero);
+    maskIsNotZero = _cmu418_mask_and (maskIsNotZero, maskAll);    // } else {
     __cmu418_mask maskIsGreaterThanZero = maskIsNotZero;
 
 
-    __cmu418_vec_float resultTemp = _cmu418_vset_float(0.f);       // float result;
-    _cmu418_vmove_float (resultTemp, x, maskIsGreaterThanZero);    // reslut = x;
+    // __cmu418_vec_float result = _cmu418_vset_float (0.f);       // float result;
+    _cmu418_vmove_float (result, x, maskIsGreaterThanZero);    // result = x;
+    __cmu418_vec_int count = _cmu418_vset_int (0);    // int count;
+    _cmu418_vsub_int    (count, y, ones, maskIsGreaterThanZero); // count = y - 1;
 
-    // Leaving rest undone 201904192254
+    _cmu418_vgt_int(maskIsGreaterThanZero, count, zeros, maskIsGreaterThanZero);
 
+    while (_cmu418_cntbits (maskIsGreaterThanZero))
+    {
+      _cmu418_vmult_float (result, result, x, maskIsGreaterThanZero);
+      _cmu418_vsub_int    (count, count, ones, maskIsGreaterThanZero);
+      _cmu418_vgt_int     (maskIsGreaterThanZero, count, zeros, maskIsGreaterThanZero);
+    }
+
+    __cmu418_mask   maskIsGreaterThan9s = _cmu418_init_ones (0);
+    _cmu418_vgt_float (maskIsGreaterThan9s, result, float9_999999s, maskIsNotZero);
+    _cmu418_vset_float (result, 9.999999f, maskIsGreaterThan9s);
+    _cmu418_vstore_float (output + i, result, maskAll);
   }
 
 }

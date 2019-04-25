@@ -68,12 +68,25 @@ export void mandelbrot_ispc_withtasks(uniform float x0, uniform float y0,
                                       uniform int output[])
 {
 
-    uniform int rowsPerTask = height / 2;
+    uniform int NUM_TASK = 50;
+    uniform int rowsPerTask = height / NUM_TASK;
 
     // create 2 tasks
-    launch[2] mandelbrot_ispc_task(x0, y0, x1, y1,
+    launch[NUM_TASK] mandelbrot_ispc_task(x0, y0, x1, y1,
                                      width, height,
                                      rowsPerTask,
                                      maxIterations,
-                                     output); 
+                                     output);
+    /*
+    [mandelbrot serial]:    [232.342] ms
+    Wrote image file mandelbrot-serial.ppm
+    [mandelbrot ispc]:    [74.129] ms
+    Wrote image file mandelbrot-ispc.ppm
+    [mandelbrot multicore ispc]:  [14.383] ms
+    Wrote image file mandelbrot-task-ispc.ppm
+            (3.13x speedup from ISPC)
+            (16.02x speedup from task ISPC)
+
+    E3-1230 V2 @ 3.30GHz
+    */
 }

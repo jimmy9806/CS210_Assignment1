@@ -31,6 +31,40 @@ int main() {
     {
         // random input values
         values[i] = .001f + 2.998f * static_cast<float>(rand()) / RAND_MAX;
+
+        /*
+        [sqrt serial]:      [1657.454] ms
+        [sqrt ispc]:        [248.446] ms
+        [sqrt task ispc]:   [85.224] ms
+                        (6.67x speedup from ISPC)
+                        (19.45x speedup from task ISPC)
+        */
+
+        // The nice case
+        // values[i] = 2.999f;
+
+        /*
+        [sqrt serial]:      [5452.772] ms
+        [sqrt ispc]:        [436.255] ms
+        [sqrt task ispc]:   [139.509] ms
+                        (12.50x speedup from ISPC)
+                        (39.09x speedup from task ISPC)
+        */
+
+
+        // The bad case
+        // values[i] = 1.f;
+        // if (i % 4 == 0)
+        //     values[i] = 2.999f;
+
+        /*
+        [sqrt serial]:      [1446.938] ms
+        [sqrt ispc]:        [438.585] ms
+        [sqrt task ispc]:   [140.146] ms
+                        (3.30x speedup from ISPC)
+                        (10.32x speedup from task ISPC)
+        */
+
         // TODO: Try different input values here.
         output[i] = 0.f;
     }
