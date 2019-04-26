@@ -144,9 +144,11 @@ int main(int argc, char** argv) {
     memset(output_thread, 0, width * height * sizeof(int));
     double minThread = 1e30;
     for (int i = 0; i < 5; ++i) {
+        printf ("Round %d\n", i + 1);
         double startTime = CycleTimer::currentSeconds();
         mandelbrotThread(numThreads, x0, y0, x1, y1, width, height, maxIterations, output_thread);
         double endTime = CycleTimer::currentSeconds();
+        printf ("Round %d takes %lf seconds to finish.\n\n", i + 1, endTime - startTime);
         minThread = std::min(minThread, endTime - startTime);
     }
 

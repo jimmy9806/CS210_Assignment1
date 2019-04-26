@@ -30,12 +30,12 @@ extern void mandelbrotSerial(
 //
 // Thread entrypoint.
 void* workerThreadStart(void* threadArgs) {
-
+    double startTime = CycleTimer::currentSeconds();
     WorkerArgs* args = static_cast<WorkerArgs*>(threadArgs);
 
     // TODO: Implement worker thread here.
 
-    printf("Hello world from thread %d\n", args->threadId);
+    // printf("Hello world from thread %d\n", args->threadId);
 
     // int height = args->height;
     // printf ("%d %d\n", args->numThreads, args->threadId);
@@ -50,6 +50,8 @@ void* workerThreadStart(void* threadArgs) {
         args->width, args->height, args->startRow, args->stripHeight,
         args->maxIterations, args->output);
 
+    double endTime = CycleTimer::currentSeconds();
+    printf ("Thread %d cost %lf to complete.\n", args->threadId, endTime - startTime);
     return NULL;
 }
 
@@ -120,3 +122,12 @@ void mandelbrotThread(
         }
     }
 }
+
+
+/*
+Intel(R) Xeon(R) CPU E3-1230 V2 @ 3.30GHz
+1.98x speedup from 2 threads
+2.44x speedup from 4 threads
+3.84x speedup from 8 threads
+5.94x speedup from 16 threads
+*/
